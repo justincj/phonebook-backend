@@ -28,6 +28,13 @@ app.get("/api/persons", (req, res) => {
   res.json(persons);
 });
 
+app.get("/api/persons/:id", (req, res) => {
+  const person = persons.filter(
+    (person) => person.id === Number(req.params.id)
+  );
+  res.json(person);
+});
+
 app.get("/info", (req, res) => {
   res.send(`<p>Phonebook has ${persons.length} people</p>
     <p>${new Date()}</p>
