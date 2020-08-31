@@ -25,6 +25,8 @@ app.use(
   )
 );
 
+app.use(express.static("build"));
+
 let persons = [
   {
     name: "Arto hellas",
