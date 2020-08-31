@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
 const Person = require("./models/person");
+const { response } = require("express");
 
 app.use(cors());
 app.use(express.json());
@@ -51,8 +52,9 @@ app.get("/api/persons/:id", (req, res) => {
   }
 });
 app.delete("/api/persons/:id", (req, res) => {
-  persons = persons.filter((person) => person.id !== Number(req.params.id));
-  res.status(204).end();
+  Person.findByIdAndRemove(req.params.id).then((result) => {
+    res.status(204).end();
+  });
 });
 
 const generateid = () => {
@@ -70,17 +72,15 @@ app.post("/api/persons", (req, res) => {
     return res.status(400).json({ error: "need both name and numebr field" });
   }
 
-  if (persons.some((person) => person.name === body.name)) {
-    return res.status(400).json({ error: "name must be unique" });
-  }
-
-  const person = {
+  const person = new Person({
     name: body.name,
     numberid: body.numberid,
-    id: generateid(),
-  };
-  persons = persons.concat(person);
-  res.json(person);
+  });
+
+  person.save().then((savedPerson) => {
+    console.log("saved");
+    res.json(savedPerson);
+  });
 });
 
 const PORT = process.env.PORT || 3001;
