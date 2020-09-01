@@ -10,10 +10,10 @@ mongoose
     useFindAndModify: false,
     useCreateIndex: true,
   })
-  .then((result) => {
+  .then(() => {
     console.log("connected to databse");
   })
-  .catch((error) => {
+  .catch(() => {
     console.log("error connecting to mongodb");
   });
 

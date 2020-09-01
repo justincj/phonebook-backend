@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use(
   morgan("tiny", {
-    skip: function (req, res) {
+    skip: function (req) {
       return req.method === "POST";
     },
   })
@@ -19,7 +19,7 @@ app.use(
   morgan(
     ":method :url :status :res[content-length] - :response-time  ms :logbody",
     {
-      skip: function (req, res) {
+      skip: function (req) {
         return req.method !== "POST";
       },
     }
@@ -61,7 +61,7 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 app.delete("/api/persons/:id", (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then((result) => {
+    .then(() => {
       res.status(204).end();
     })
     .catch((error) => next(error));
@@ -70,7 +70,7 @@ app.delete("/api/persons/:id", (req, res, next) => {
 app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
-  morgan.token("logbody", function (req, res) {
+  morgan.token("logbody", function () {
     return JSON.stringify(body);
   });
 
@@ -104,7 +104,7 @@ app.put("/api/persons/:id", (req, res, next) => {
     .catch((error) => next(error));
 });
 
-const unknownEndpoint = (req, res, next) => {
+const unknownEndpoint = (req, res) => {
   res.status(404).json({ error: "unknown endpoint" });
 };
 app.use(unknownEndpoint);

@@ -10,10 +10,11 @@ const personSchema = new mongoose.Schema({
 });
 const Person = mongoose.model("Person", personSchema);
 
-if (process.argv.length == 3) {
+if (process.argv.length === 3) {
   console.log("Phonebook");
   Person.find({}).then((result) => {
     result.forEach((person) => {
+      // @ts-ignore
       console.log(`${person.name} ${person.numberid}`);
     });
     mongoose.connection.close();
