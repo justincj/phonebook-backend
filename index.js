@@ -70,6 +70,10 @@ app.delete("/api/persons/:id", (req, res, next) => {
 app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
+  morgan.token("logbody", function (req, res) {
+    return JSON.stringify(body);
+  });
+
   if (!body.name || !body.numberid) {
     return res.status(400).json({ error: "need both name and numebr field" });
   }
@@ -102,16 +106,17 @@ app.put("/api/persons/:id", (req, res, next) => {
 
 const unknownEndpoint = (req, res, next) => {
   res.status(404).json({ error: "unknown endpoint" });
-  next();
 };
 app.use(unknownEndpoint);
 
 const errorHandler = (error, req, res, next) => {
-  console.log(error.name);
+  console.log(error.message);
   if (error.name === "CastError") {
     return res.status(400).send({ error: "Malformed input" });
+  } else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
   }
-  next();
+  next(error);
 };
 app.use(errorHandler);
 
