@@ -110,7 +110,8 @@ const unknownEndpoint = (req, res, next) => {
 app.use(unknownEndpoint);
 
 const errorHandler = (error, req, res, next) => {
-  console.log(error.message);
+  console.log(error);
+  console.log("what is", Error);
   if (error.name === "CastError") {
     return res.status(400).send({ error: "Malformed input" });
   } else if (error.name === "ValidationError") {
