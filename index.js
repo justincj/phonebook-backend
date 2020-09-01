@@ -4,7 +4,6 @@ const morgan = require("morgan");
 const cors = require("cors");
 const app = express();
 const Person = require("./models/person");
-const { response } = require("express");
 
 app.use(cors());
 app.use(express.json());
@@ -16,7 +15,6 @@ app.use(
     },
   })
 );
-
 app.use(
   morgan(
     ":method :url :status :res[content-length] - :response-time  ms :logbody",
@@ -30,43 +28,47 @@ app.use(
 
 app.use(express.static("build"));
 
-app.get("/info", (req, res) => {
-  res.send(`<p>Phonebook has ${persons.length} people</p>
+app.get("/info", (req, res, next) => {
+  Person.find({})
+    .then((result) => {
+      return res.send(`<p>Phonebook has ${result.length} people</p>
     <p>${new Date()}</p>
   `);
+    })
+    .catch((error) => {
+      next(error);
+    });
 });
 
-app.get("/api/persons", (req, res) => {
-  Person.find({}).then((people) => {
-    res.json(people);
-  });
+app.get("/api/persons", (req, res, next) => {
+  Person.find({})
+    .then((people) => {
+      res.json(people);
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find((person) => person.id === id);
-  if (person) {
-    res.json(person);
-  } else {
-    res.status(404).end();
-  }
+app.get("/api/persons/:id", (req, res, next) => {
+  Person.findById(req.params.id)
+    .then((person) => {
+      if (person) {
+        res.json(person);
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
-app.delete("/api/persons/:id", (req, res) => {
-  Person.findByIdAndRemove(req.params.id).then((result) => {
-    res.status(204).end();
-  });
+app.delete("/api/persons/:id", (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then((result) => {
+      res.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
-const generateid = () => {
-  return Math.round(Math.random() * 10000);
-};
-
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
-
-  morgan.token("logbody", function (req, res) {
-    return JSON.stringify(body);
-  });
 
   if (!body.name || !body.numberid) {
     return res.status(400).json({ error: "need both name and numebr field" });
@@ -77,14 +79,43 @@ app.post("/api/persons", (req, res) => {
     numberid: body.numberid,
   });
 
-  person.save().then((savedPerson) => {
-    console.log("saved");
-    res.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      res.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
-const PORT = process.env.PORT || 3001;
+app.put("/api/persons/:id", (req, res, next) => {
+  const body = req.body;
+  const person = {
+    name: body.name,
+    numberid: body.numberid,
+  };
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      return res.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
 
+const unknownEndpoint = (req, res, next) => {
+  res.status(404).json({ error: "unknown endpoint" });
+  next();
+};
+app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+  console.log(error.name);
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "Malformed input" });
+  }
+  next();
+};
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
